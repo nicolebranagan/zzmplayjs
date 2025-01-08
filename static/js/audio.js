@@ -48,12 +48,19 @@ function initSoundFreqTable() {
 const soundFreqTable = initSoundFreqTable();
 
 const DRUM_NOTE_LENGTH = 1 / 1000;
-function generateDrum(drum, sampleRate) {
+function generateDrum(drum, sampleRate, duration) {
   let result = new Float32Array(0);
   for (let i = 0; i < drum.length; i++) {
     result = f32ArrayConcat(result, generateSquareWave(drum[i], sampleRate, DRUM_NOTE_LENGTH));
   }
-  return result;
+
+  // Extend to length of current note
+  if (result.length > duration * sampleRate) {
+    return result;
+  }
+  const finalResult = new Float32Array(duration * sampleRate);
+  finalResult.set(result, 0);
+  return finalResult;
 }
 
 // Translated from TurboPascal
@@ -62,33 +69,33 @@ function initSoundDrumTable() {
 
   SoundDrumTable[0][0] = 3200;
 
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[1][i] = (i + 1) * 100 + 1000;
+  for (let i = 1; i <= 14; i++) {
+    SoundDrumTable[1][i-1] = (i) * 100 + 1000;
   }
 
-  for (let i = 0; i < 16; i++) {
-    SoundDrumTable[2][i] = (i % 2) * 1600 + 1600 + (i % 4) * 1600;
+  for (let i = 1; i <= 14; i++) {
+    SoundDrumTable[2][i - 1] = (i % 2) * 1600 + 1600 + (i % 4) * 1600;
   }
 
   for (let i = 0; i < 14; i++) {
     SoundDrumTable[4][i] = Math.floor(Math.random() * 5000) + 500;
   }
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 7; i++) {
     SoundDrumTable[5][i * 2] = 1600;
     SoundDrumTable[5][i * 2 + 1] = Math.floor(Math.random() * 1600) + 800;
   }
 
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[6][i] = ((i % 2) * 880) + 880 + ((i % 3) * 440);
+  for (let i = 1; i <= 14; i++) {
+    SoundDrumTable[6][i - 1] = ((i % 2) * 880) + 880 + ((i % 3) * 440);
   }
 
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[7][i] = 700 - ((i + 1) * 12);
+  for (let i = 1; i <= 14; i++) {
+    SoundDrumTable[7][i - 1] = 700 - (i * 12);
   }
 
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[8][i] = ((i + 1) * 20 + 1200) - Math.floor(Math.random() * ((i + 1) * 40));
+  for (let i = 1; i <= 14; i++) {
+    SoundDrumTable[8][i - 1] = (i * 20 + 1200) - Math.floor(Math.random() * i * 40);
   }
 
   for (let i = 0; i < 14; i++) {
@@ -186,39 +193,39 @@ function parseSound(input, sampleRate) {
         break;
       }
       case '0': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[0], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[0], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '1': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[1], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[1], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '2': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[2], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[2], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '4': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[4], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[4], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '5': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[5], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[5], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '6': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[6], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[6], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '7': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[7], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[7], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '8': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[8], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[8], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
       case '9': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[9], sampleRate))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[9], sampleRate, SIXTEENTH_DURATION * noteDuration))
         break;
       }
     }
