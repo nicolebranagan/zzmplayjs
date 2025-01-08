@@ -248,24 +248,12 @@ function parseSound(input, sampleRate) {
 }
 
 
-function playSound() {
+function playZzmAudio(zztAudio) {
   const ctx = new AudioContext();
   const sampleRate = ctx.sampleRate; // audio context's sample rate
 
   // Generate the square wave data
-  const data = parseSound(`sc-g+c-g+c-g+c-g+e!ce!ce!ce!cfcfcfc
-sfca!da!dgfe!d
-sc-g+c-g+c-g+c-g+e!ce!ce!ce!cfcfcfc
-sfca!da!dgfe!d
-scxx64x6xxxx64x21xxx64x6xxxx64x21
-scxx64x6x6x64x210xxx64x6x6x64x210
-scxx64x6xcxx64x6xe!xx64x6xfx6xgx6x
-scxx64x6xe!x6x4x6xfx210x10xgx210x00
-sc-g+c-g+c-g+c-g+e!ce!ce!ce!cfcfcfc
-sfca!da!dgfe!d
-sc-g+c-g+c-g+c-g+e!ce!ce!ce!cfcfcfc
-sfca!da!dgfe!d
-qc`, sampleRate);
+  const data = parseSound(zztAudio, sampleRate);
 
   // Create an AudioBuffer
   const audioBuffer = ctx.createBuffer(1, data.length, sampleRate);

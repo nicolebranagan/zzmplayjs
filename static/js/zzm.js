@@ -63,11 +63,9 @@ function parseZzmAsText(text) {
     songs.push({
       index: i,
       title: songTitle,
-      data: songDatas[i]
+      data: songDatas[i].join('')
     });
   }
-
-  console.error("song", title, songs);
 
   return {
     title,
