@@ -247,8 +247,12 @@ function parseSound(input, sampleRate) {
   return output;
 }
 
+let activeSource = null;
 
 function playZzmAudio(zztAudio) {
+  if (activeSource) {
+    activeSource.stop();
+  }
   const ctx = new AudioContext();
   const sampleRate = ctx.sampleRate; // audio context's sample rate
 
@@ -271,4 +275,11 @@ function playZzmAudio(zztAudio) {
 
   // Start playback
   source.start();
+  activeSource = source;
+}
+
+function stopZzmAudio() {
+  if (activeSource) {
+    activeSource.stop();
+  }
 }
