@@ -29,14 +29,16 @@ function loadNewZzm(t) {
     select.removeChild(select.lastChild);
   }
 
+  let i = 0;
   for (const song of selectedFile.songs) {
     const option = document.createElement("option");
-    option.value = song.index.toString();
+    option.value = i.toString();
     option.innerText = song.title;
     select.appendChild(option);
+    i++;
   }
 
-  select.value = selectedFile.songs[0].index.toString();
+  select.value = '0';
 }
 
 document.getElementById("playButton").addEventListener("click", () => {
@@ -56,4 +58,31 @@ document.getElementById("playButton").addEventListener("click", () => {
     throw new Error("No song?")
   }
   playZzmAudio(song.data);
+});
+
+document.getElementById("dumpButton").addEventListener("click", () => {
+  if (!selectedFile) {
+    return;
+  }
+  const select = document.getElementById('songSelector');
+  const value = select.value;
+  if (value === "none") {
+    // Should never reach this
+    return;
+  }
+
+  const index = parseInt(value, 10);
+  const song = selectedFile.songs[index];
+  if (!song) {
+    throw new Error("No song?")
+  }
+
+  const sampleRate = (new AudioContext()).sampleRate
+  const data = parseSound(song.data, sampleRate);
+  const blob = new Blob([data]);
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a')
+  a.href = url;
+  a.download = `${song.title} - ${sampleRate}.raw`
+  a.click()
 });

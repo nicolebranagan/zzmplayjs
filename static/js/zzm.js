@@ -47,7 +47,7 @@ function parseZzmAsText(text) {
 
   const songs = [];
 
-  for (let i = 0; i < songTitles.length; i++) {
+  for (let i = 0; i < songDatas.length; i++) {
     if (songDatas[i] === undefined) {
       if (songTitles[i] !== undefined) {
         console.error(`No song data for track ${i}: ${songTitles[i]}`)
