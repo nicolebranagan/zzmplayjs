@@ -1,5 +1,15 @@
 # zzmplayjs
 
+A JS ZZM player. Download the code and run `index.html` locally and you can open and play files. There is no build step. Note that this uses the WebAudio API, which may only be available in HTTPS contexts. The `index.html` is meant primarily as a proof of concept.
+
+## Implementing
+
+There are three JS files in the `static/js` folder.
+
+* `audio.js` Use the function `playZzmAudio`, passing it a ZZT audio string (like you would pass to `#play`) in string form.
+* `zzm.js` This will allow you to load ZZM files directly. `parseZzmAsText` will convert the text of a ZZM file into an object that will give the title and songs, each song with its own title as well as the string that can be passed into `playZzmAudio`.
+* `ui.js` This code implements the example UI. Most implementers will not need this code, but it's left as an example.
+
 ## Credits
 
 Some code used from the Reconstruction of ZZT <https://github.com/asiekierka/reconstruction-of-zzt/tree/master?tab=readme-ov-file>, whose license is reproduced below:
