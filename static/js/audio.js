@@ -108,6 +108,13 @@ function parseSound(input, sampleRate) {
     let noteTone = -1;
     const char = input[0].toUpperCase();
     switch (char) {
+      case '\n': {
+        // New #PLAY statement.
+        noteOctave = 3;
+        noteDuration = 1;
+        noteTone = -1;
+        break;
+      }
       case 'T': {
         noteDuration = 1;
         break;
