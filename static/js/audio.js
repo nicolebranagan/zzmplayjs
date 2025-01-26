@@ -76,49 +76,19 @@ function generateDrum(drum, sampleRate, duration) {
   return finalResult;
 }
 
-// Translated from Turbo Pascal
-function initSoundDrumTable() {
-  const SoundDrumTable = Array.from({ length: 10 }, () => []);
-
-  SoundDrumTable[0][0] = 3200;
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[1][i-1] = (i) * 100 + 1000;
-  }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[2][i - 1] = (i % 2) * 1600 + 1600 + (i % 4) * 1600;
-  }
-
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[4][i] = Math.floor(Math.random() * 5000) + 500;
-  }
-
-  for (let i = 0; i < 7; i++) {
-    SoundDrumTable[5][i * 2] = 1600;
-    SoundDrumTable[5][i * 2 + 1] = Math.floor(Math.random() * 1600) + 800;
-  }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[6][i - 1] = ((i % 2) * 880) + 880 + ((i % 3) * 440);
-  }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[7][i - 1] = 700 - (i * 12);
-  }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[8][i - 1] = (i * 20 + 1200) - Math.floor(Math.random() * i * 40);
-  }
-
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[9][i] = Math.floor(Math.random() * 440) + 220;
-  }
-
-  return SoundDrumTable;
-}
-
-const soundDrumTable = initSoundDrumTable();
+// Extracted from a modified ZZT executable
+const soundDrumTable = [
+  [3200],
+  [1100,  1200,   1300,   1400,   1500,   1600,   1700,   1800,   1900,   2000,   2100,   2200,   2300,   2400],
+  [4800,  4800,   8000,   1600,   4800,   4800,   8000,   1600,   4800,   4800,   8000,   1600,   4800,   4800],
+  [],
+  [500,   2556,   1929,   3776,   3386,   4517,   1385,   1103,   4895,   3396,   874,    1616,   5124,   606],
+  [1600,  1514,   1600,   821,    1600,   1715,   1600,   911,    1600,   1968,   1600,   1490,   1600,   1722],
+  [2200,  1760,   1760,   1320,   2640,   880,    2200,   1760,   1760,   1320,   2640,   880,    2200,   1760],
+  [688,   676,    664,    652,    640,    628,    616,    604,    592,    580,    568,    556,    544,    532],
+  [1207,  1224,   1163,   1127,   1159,   1236,   1269,   1314,   1127,   1224,   1320,   1332,   1257,   1327],
+  [378,   331,    316,    230,    224,    384,    480,    320,    358,    412,    376,    621,    554,    426]
+];
 
 function durationToTime(duration) {
   // ZZT stores the note duration as a byte.
