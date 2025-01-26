@@ -1,6 +1,6 @@
-const SIXTEENTH_DURATION = 55 / 1000;
 // Programmable Interrupt Timer frequency, in Hz.
-const PIT_FREQUENCY = 1193182;
+const PIT_FREQUENCY = 1193181.66;
+const SIXTEENTH_DURATION = 65535 / PIT_FREQUENCY;
 // If set to true, frequency values are truncated/rounded as in ZZT.
 const EMULATE_FREQUENCY_ROUNDING = true;
 
