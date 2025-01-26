@@ -1,4 +1,8 @@
 const SIXTEENTH_DURATION = 55 / 1000;
+// Programmable Interrupt Timer frequency, in Hz.
+const PIT_FREQUENCY = 1193182;
+// If set to true, frequency values are truncated/rounded as in ZZT.
+const EMULATE_FREQUENCY_ROUNDING = true;
 
 function f32ArrayConcat(array1, array2) {
   const result = new Float32Array(array1.length + array2.length);
@@ -8,11 +12,20 @@ function f32ArrayConcat(array1, array2) {
 }
 
 function generateSquareWave(freq, sampleRate, duration) {
+  if (EMULATE_FREQUENCY_ROUNDING) {
+    // Apply frequency rounding from Turbo Pascal Trunc().
+    freq = Math.floor(freq);
+
+    // Apply frequency rounding from Turbo Pascal Sound(),
+    // which calculates a divisor for the PIT.
+    freq = PIT_FREQUENCY / Math.floor(PIT_FREQUENCY / freq);
+  }
+
   const output = new Float32Array(Math.floor(duration * sampleRate));
   const period = (1 / freq) * sampleRate;
   for (let i = 0; i < output.length; i++) {
     const point = i % period;
-    if (point > (period / 2)) {
+    if (point >= (period / 2)) {
       output[i] = -1;
     } else {
       output[i] = 1;
@@ -38,7 +51,7 @@ function initSoundFreqTable() {
   for (let octave = 1; octave <= 15; octave++) {
     let noteBase = Math.exp(octave*ln2) * freqC1;
     for (let note = 0; note <= 11; note++) {
-      soundFreqTable[octave * 16 + note] = Math.floor(noteBase);
+      soundFreqTable[octave * 16 + note] = noteBase;
       noteBase *= noteStep;
     }
   }
@@ -63,7 +76,7 @@ function generateDrum(drum, sampleRate, duration) {
   return finalResult;
 }
 
-// Translated from TurboPascal
+// Translated from Turbo Pascal
 function initSoundDrumTable() {
   const SoundDrumTable = Array.from({ length: 10 }, () => []);
 
