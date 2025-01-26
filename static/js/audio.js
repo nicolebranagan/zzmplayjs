@@ -1,4 +1,8 @@
-const SIXTEENTH_DURATION = 55 / 1000;
+// Programmable Interrupt Timer frequency, in Hz.
+const PIT_FREQUENCY = 1193181.66;
+const SIXTEENTH_DURATION = 65535 / PIT_FREQUENCY;
+// If set to true, frequency values are truncated/rounded as in ZZT.
+const EMULATE_FREQUENCY_ROUNDING = true;
 
 function f32ArrayConcat(array1, array2) {
   const result = new Float32Array(array1.length + array2.length);
@@ -8,11 +12,20 @@ function f32ArrayConcat(array1, array2) {
 }
 
 function generateSquareWave(freq, sampleRate, duration) {
+  if (EMULATE_FREQUENCY_ROUNDING) {
+    // Apply frequency rounding from Turbo Pascal Trunc().
+    freq = Math.floor(freq);
+
+    // Apply frequency rounding from Turbo Pascal Sound(),
+    // which calculates a divisor for the PIT.
+    freq = PIT_FREQUENCY / Math.floor(PIT_FREQUENCY / freq);
+  }
+
   const output = new Float32Array(Math.floor(duration * sampleRate));
   const period = (1 / freq) * sampleRate;
   for (let i = 0; i < output.length; i++) {
     const point = i % period;
-    if (point > (period / 2)) {
+    if (point >= (period / 2)) {
       output[i] = -1;
     } else {
       output[i] = 1;
@@ -38,7 +51,7 @@ function initSoundFreqTable() {
   for (let octave = 1; octave <= 15; octave++) {
     let noteBase = Math.exp(octave*ln2) * freqC1;
     for (let note = 0; note <= 11; note++) {
-      soundFreqTable[octave * 16 + note] = Math.floor(noteBase);
+      soundFreqTable[octave * 16 + note] = noteBase;
       noteBase *= noteStep;
     }
   }
@@ -63,49 +76,28 @@ function generateDrum(drum, sampleRate, duration) {
   return finalResult;
 }
 
-// Translated from TurboPascal
-function initSoundDrumTable() {
-  const SoundDrumTable = Array.from({ length: 10 }, () => []);
+// Extracted from a modified ZZT executable
+const soundDrumTable = [
+  [3200],
+  [1100,  1200,   1300,   1400,   1500,   1600,   1700,   1800,   1900,   2000,   2100,   2200,   2300,   2400],
+  [4800,  4800,   8000,   1600,   4800,   4800,   8000,   1600,   4800,   4800,   8000,   1600,   4800,   4800],
+  [],
+  [500,   2556,   1929,   3776,   3386,   4517,   1385,   1103,   4895,   3396,   874,    1616,   5124,   606],
+  [1600,  1514,   1600,   821,    1600,   1715,   1600,   911,    1600,   1968,   1600,   1490,   1600,   1722],
+  [2200,  1760,   1760,   1320,   2640,   880,    2200,   1760,   1760,   1320,   2640,   880,    2200,   1760],
+  [688,   676,    664,    652,    640,    628,    616,    604,    592,    580,    568,    556,    544,    532],
+  [1207,  1224,   1163,   1127,   1159,   1236,   1269,   1314,   1127,   1224,   1320,   1332,   1257,   1327],
+  [378,   331,    316,    230,    224,    384,    480,    320,    358,    412,    376,    621,    554,    426]
+];
 
-  SoundDrumTable[0][0] = 3200;
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[1][i-1] = (i) * 100 + 1000;
+function durationToTime(duration) {
+  // ZZT stores the note duration as a byte.
+  duration = duration % 256;
+  if (duration == 0) {
+      duration = 256;
   }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[2][i - 1] = (i % 2) * 1600 + 1600 + (i % 4) * 1600;
-  }
-
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[4][i] = Math.floor(Math.random() * 5000) + 500;
-  }
-
-  for (let i = 0; i < 7; i++) {
-    SoundDrumTable[5][i * 2] = 1600;
-    SoundDrumTable[5][i * 2 + 1] = Math.floor(Math.random() * 1600) + 800;
-  }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[6][i - 1] = ((i % 2) * 880) + 880 + ((i % 3) * 440);
-  }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[7][i - 1] = 700 - (i * 12);
-  }
-
-  for (let i = 1; i <= 14; i++) {
-    SoundDrumTable[8][i - 1] = (i * 20 + 1200) - Math.floor(Math.random() * i * 40);
-  }
-
-  for (let i = 0; i < 14; i++) {
-    SoundDrumTable[9][i] = Math.floor(Math.random() * 440) + 220;
-  }
-
-  return SoundDrumTable;
+  return SIXTEENTH_DURATION * duration;
 }
-
-const soundDrumTable = initSoundDrumTable();
 
 function parseSound(input, sampleRate) {
   let output = new Float32Array(0);
@@ -116,6 +108,13 @@ function parseSound(input, sampleRate) {
     let noteTone = -1;
     const char = input[0].toUpperCase();
     switch (char) {
+      case '\n': {
+        // New #PLAY statement.
+        noteOctave = 3;
+        noteDuration = 1;
+        noteTone = -1;
+        break;
+      }
       case 'T': {
         noteDuration = 1;
         break;
@@ -189,43 +188,43 @@ function parseSound(input, sampleRate) {
         break;
       }
       case 'X': {
-        output = f32ArrayConcat(output, generateRest(sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateRest(sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '0': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[0], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[0], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '1': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[1], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[1], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '2': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[2], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[2], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '4': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[4], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[4], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '5': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[5], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[5], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '6': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[6], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[6], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '7': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[7], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[7], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '8': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[8], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[8], sampleRate, durationToTime(noteDuration)))
         break;
       }
       case '9': {
-        output = f32ArrayConcat(output, generateDrum(soundDrumTable[9], sampleRate, SIXTEENTH_DURATION * noteDuration))
+        output = f32ArrayConcat(output, generateDrum(soundDrumTable[9], sampleRate, durationToTime(noteDuration)))
         break;
       }
     }
@@ -238,7 +237,7 @@ function parseSound(input, sampleRate) {
         noteTone = noteTone + 1;
         input = input.substring(1);
       }
-      output = f32ArrayConcat(output, generateSquareWave(soundFreqTable[noteOctave * 16 + noteTone], sampleRate, SIXTEENTH_DURATION * noteDuration));
+      output = f32ArrayConcat(output, generateSquareWave(soundFreqTable[noteOctave * 16 + noteTone], sampleRate, durationToTime(noteDuration)));
     }
 
     input = input.substring(1);
